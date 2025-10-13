@@ -1,0 +1,140 @@
+// ----------- Start MongoDB Shell
+// Open CMD and go to MongoDB bin directory, then run:
+// cd C:\Program Files\MongoDB\Server\4.2\bin
+// mongo
+
+// ----------- Create and Use Database
+show dbs                                  // Show all databases
+use mydb                                  // Create/use a DB named mydb
+use db1                                   // Switch to/use db1
+
+// ----------- Collection Operations
+show collections                          // List of collections in current DB
+db.version()                              // Show the MongoDB version
+db.stats()                                // Show stats of current DB
+help()                                    // MongoDB shell help
+
+db.createCollection("Person")             // Create collection named Person
+db.Person.drop()                          // Drop Person collection
+db.createCollection("Student")            // Create Student collection
+
+// ----------- Insert Documents
+db.Student.insert({Rno: 1, Name: "ABC", Grade: "A", Hobbies: ["Singing"]})
+db.Employee.insert({Eno: 1101, EName: "Maitri", Designation: "HR", Salary: 150000})
+
+// ----------- Find Documents
+db.Student.find()                         // Find all students
+db.Student.find().pretty()                // Pretty print students
+db.Employee.find()                        // Find all employees
+db.Employee.find().pretty()               // Pretty print employees
+
+// ----------- Query Operations
+// Find students with hobbies
+// 'singing' or 'teaching'
+db.Student.find({hobbies: {$in: ["singing", "teaching"]}})
+
+// Find students with two hobbies
+db.Student.find({hobbies: {$in: ["singing", "dancing"]}})
+
+// Find by name using regex (starts with 'A')
+db.Student.find({Name: /^A/}).pretty()
+
+// Find by roll number
+db.Student.find({Rno: 1}).pretty()
+
+// Find by two roll numbers using $or
+db.Student.find({$or: [{Rno: 1}, {Rno: 5}]})
+
+// Find by grade
+// Only those with grade "A"
+db.Student.find({grade: "A"})
+
+// Count of students with grade "A"
+db.Student.count({grade: "A"})
+
+// Sort students by Name (ascending and descending)
+db.Student.find().sort({Name: 1})          // Ascending
+db.Student.find().sort({Name: -1})         // Descending
+
+// Skip first 2 students
+db.Student.find().skip(2)
+
+// Limit output to first 2 students
+db.Student.find().limit(2)
+
+db.Student.count()                         // Total count of students
+
+// ----------- Array Operations
+// Create Food collection & insert docs
+db.createCollection("Food")
+db.Food.insert({no: 1, fruits: ["banana", "apple", "cherry"]})
+db.Food.insert({no: 2, fruits: ["orange", "kiwi", "mango"]})
+db.Food.insert({no: 3, fruits: ["pineapple", "strawberry", "grapes"]})
+db.Food.insert({no: 4, fruits: ["banana", "strawberry", "grapes"]})
+db.Food.insert({no: 5, fruits: ["orange", "grapes"]})
+
+// Array queries
+// Match whole array
+db.Food.find({fruits: ["banana", "apple", "cherry"]})
+
+// Where array includes "banana"
+db.Food.find({fruits: "banana"})
+
+// Where array includes "strawberry"
+db.Food.find({fruits: "strawberry"})
+
+// Where array includes "grapes"
+db.Food.find({fruits: "grapes"})
+
+// Array size 2
+db.Food.find({fruits: { $size: 2 }})
+
+// $slice for partial array from "fruits"
+db.Food.find({no: 1}, {fruits: { $slice: 2 } })
+db.Food.find({no: 2}, {fruits: { $slice: [0, 2] } })
+
+// $all operator (all specified elements)
+db.Food.find({fruits: { $all: ["orange", "grapes"] }})
+
+// ----------- Update Array Operations
+
+// Use $set
+// Set whole array at index
+db.Food.update({no: 1}, { $set: {fruits: ["apple"]} })
+
+// Use $push to add
+db.Food.update({no: 2}, { $push: {fruits: "mango"} })
+
+// $addToSet avoids duplicates
+db.Food.update({no: 2}, { $addToSet: {fruits: "orange"} })
+
+// $pop removes last or first element ($pop: 1 is last, -1 is first)
+db.Food.update({no: 3}, { $pop: {fruits: 1} })
+
+// $pull removes value
+db.Food.update({no: 3}, { $pull: {fruits: "pineapple"} })
+
+// Remove from all documents
+// Remove "banana" from the "fruits" array everywhere
+db.Food.update({fruits: "banana"}, { $pull: {fruits: "banana"} }, {multi: true})
+
+// ----------- Aggregation Functions
+// Insert customer docs
+db.customers.insert([{cno: "123", accbal: 500, acctype: "S"}, {cno: "123", accbal: 900, acctype: "S"}, {cno: "C11", accbal: 1200, acctype: "S"}, {cno: "C13", accbal: 1500, acctype: "C"}])
+
+// Group and get sum by "cno"
+db.customers.aggregate([
+  { $group: { _id: "$cno", To_AccBal: { $sum: "$accbal" } } }
+])
+
+// Match acctype first, then group and sum
+db.customers.aggregate([
+  { $match: { acctype: "S" } },
+  { $group: { _id: "$cno", To_AccBal: { $sum: "$accbal" } } }
+])
+
+// Having condition - filter after aggregate
+db.customers.aggregate([
+  { $group: { _id: "$cno", To_AccBal: { $sum: "$accbal" } } },
+  { $match: { To_AccBal: { $gte: 1200 } } }
+])
